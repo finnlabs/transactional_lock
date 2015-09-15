@@ -1,8 +1,12 @@
 # TransactionalLock
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/transactional_lock`. To experiment with that code, run `bin/console` for an interactive prompt.
+TransactionalLock is providing access to database advisory locks that will be automatically released
+upon the end of a transaction (`COMMIT` or `ROLLBACK`).
 
-TODO: Delete this and the text above, and describe your gem
+As of now this gem only targets MySQL databases, where such locks are not available, thus they
+are emulated by ensuring that the outmost ActiveRecord transaction will release all\* locks.
+
+\* "all" refers to "one", because in MySQL a session can only hold a single advisory lock.
 
 ## Installation
 
@@ -22,17 +26,33 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+While inside a transaction acquire your lock and you can be sure, that it will be released at
+the end of the transaction:
 
-## Development
+````ruby
+ActiveRecord::Base.transaction do
+  TransactionalLock::AdvisoryLock.new('your_lock').acquire
+  # do your work
+end
+# the lock has been released at this point
+````
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake false` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+It will also work for nested AR transactions (that do not really map to your SQL `COMMIT` or `ROLLBACK`):
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+````ruby
+ActiveRecord::Base.transaction do
+  ActiveRecord::Base.transaction do
+    TransactionalLock::AdvisoryLock.new('your_lock').acquire
+  end
+
+  # lock is still acquired here...
+end # actual SQL COMMIT
+# the lock has been released at this point
+````
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/transactional_lock. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](contributor-covenant.org) code of conduct.
+Bug reports and pull requests are welcome on GitHub at https://github.com/finnlabs/transactional_lock. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](contributor-covenant.org) code of conduct.
 
 
 ## License
