@@ -1,3 +1,5 @@
+[![build status](https://travis-ci.org/finnlabs/transactional_lock.svg)](https://travis-ci.org/finnlabs/transactional_lock)
+
 # TransactionalLock
 
 TransactionalLock is providing access to database advisory locks that will be automatically released
