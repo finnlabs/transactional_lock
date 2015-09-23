@@ -21,9 +21,7 @@ module TransactionalLock
       yield
     ensure
       self.class.deassign_root_wrapper(self) do
-        ::TransactionalLock::AdvisoryLock.acquired_locks.each do |lock|
-          lock.release
-        end
+        ::TransactionalLock::AdvisoryLock.release_all_locks
       end
     end
   end

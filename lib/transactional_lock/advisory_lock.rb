@@ -19,6 +19,12 @@ module TransactionalLock
         acquired_locks_changeable.dup.freeze
       end
 
+      def release_all_locks
+        acquired_locks.each do |lock|
+          lock.release
+        end
+      end
+
       def push_lock(lock)
         acquired_locks_changeable << lock
       end
