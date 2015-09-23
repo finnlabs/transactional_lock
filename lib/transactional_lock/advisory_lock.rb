@@ -16,22 +16,25 @@ module TransactionalLock
   class AdvisoryLock
     class << self
       def acquired_locks
-        @acquired_locks ||= []
-        @acquired_locks.dup.freeze
+        acquired_locks_changeable.dup.freeze
       end
 
       def push_lock(lock)
-        @acquired_locks ||= []
-        @acquired_locks << lock
+        acquired_locks_changeable << lock
       end
 
       def delete_lock(lock)
-        @acquired_locks ||= []
-        @acquired_locks.delete(lock)
+        acquired_locks_changeable.delete(lock)
       end
 
       def forget_locks!
         @acquired_locks = []
+      end
+
+      private
+
+      def acquired_locks_changeable
+        @acquired_locks ||= []
       end
     end
 
