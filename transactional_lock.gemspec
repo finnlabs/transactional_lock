@@ -18,6 +18,9 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
+  # N.B. Though our SQL commands are depending on a MySQL-backend, we do not depend on any
+  # specific SQL-gem. We only need activerecord to do our work, in the hope that our SQL code
+  # makes any sense to the active backend.
   spec.add_dependency "activerecord", ">= 4.0"
 
   spec.add_development_dependency "bundler", "~> 1.10"

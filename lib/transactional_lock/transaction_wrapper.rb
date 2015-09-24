@@ -4,7 +4,7 @@ module TransactionalLock
   class TransactionWrapper
     # If the root wrapper is not yet set, the specified wrapper will become the root wrapper.
     def self.try_assign_root_wrapper(wrapper)
-      @root_wrapper = wrapper unless @root_wrapper
+      @root_wrapper ||= wrapper
     end
 
     # If the specified wrapper is the root wrapper, it will be deassigned and the block passed
@@ -21,9 +21,7 @@ module TransactionalLock
       yield
     ensure
       self.class.deassign_root_wrapper(self) do
-        ::TransactionalLock::AdvisoryLock.acquired_locks.each do |lock|
-          lock.release
-        end
+        ::TransactionalLock::AdvisoryLock.release_all_locks
       end
     end
   end

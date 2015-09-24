@@ -14,23 +14,34 @@ module TransactionalLock
   # N.B. currently quite MySQL specific, except that its interface allows more than one active lock
   # MySQL will only ever support one lock at a time (releasing earlier locks implicitly)
   class AdvisoryLock
-    def self.acquired_locks
-      @acquired_locks ||= []
-      @acquired_locks.dup.freeze
-    end
+    class << self
+      def acquired_locks
+        acquired_locks_changeable.dup.freeze
+      end
 
-    def self.push_lock(lock)
-      @acquired_locks ||= []
-      @acquired_locks << lock
-    end
+      def release_all_locks
+        acquired_locks.each do |lock|
+          lock.release
+        end
+      end
 
-    def self.delete_lock(lock)
-      @acquired_locks ||= []
-      @acquired_locks.delete(lock)
-    end
+      def push_lock(lock)
+        acquired_locks_changeable << lock
+      end
 
-    def self.forget_locks!
-      @acquired_locks = []
+      def delete_lock(lock)
+        acquired_locks_changeable.delete(lock)
+      end
+
+      def forget_locks!
+        @acquired_locks = []
+      end
+
+      private
+
+      def acquired_locks_changeable
+        @acquired_locks ||= []
+      end
     end
 
     attr_reader :name, :timeout
@@ -43,7 +54,7 @@ module TransactionalLock
 
     def acquire
       return if already_locked?
-      check_for_lock_conflicts!
+      raise_on_lock_conflicts!
 
       result = ActiveRecord::Base.connection.execute(
                  "SELECT GET_LOCK('#{sql_name}', #{sql_timeout})")
@@ -68,7 +79,7 @@ module TransactionalLock
       self.class.acquired_locks.any? { |lock| lock.name == name }
     end
 
-    def check_for_lock_conflicts!
+    def raise_on_lock_conflicts!
       conflict_lock = self.class.acquired_locks.detect { |lock| lock.name != name }
       if conflict_lock
         raise LockConflict.new self, conflict_lock
