@@ -2,6 +2,12 @@
 
 # TransactionalLock
 
+## ⚠️ Deprecation notice
+
+This gem is not being maintained anymore. We migrated to <https://github.com/ClosureTree/with_advisory_lock> and suggest you do as well.
+
+
+
 TransactionalLock is providing access to database advisory locks that will be automatically released
 upon the end of a transaction (`COMMIT` or `ROLLBACK`).
 
